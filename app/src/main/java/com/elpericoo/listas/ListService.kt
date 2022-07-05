@@ -3,33 +3,39 @@ package com.elpericoo.listas
 import android.content.ClipData
 import android.content.Context
 import android.util.Log
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
+import java.io.IOException
+import java.util.*
 import kotlin.math.log
 
 class ListService(context: Context) {
     val context = context
-    val fileName = "lists.txt"
-    val file = File(context.filesDir, fileName)
-    var list = mutableListOf<String>()
+    var list = mutableListOf<Item>()
+    var json = JSONArray()
 
-
-    //Obtener datos del fichero local list.txt
-    fun getListFromFile():MutableList<String>{
-        if (!file.exists()) {
-            file.createNewFile()
-        }
-
-        list = file.readLines() as MutableList<String>
-        return list
-
-    }
-
-    fun addItemToList(item: String){
-        list.add(item)
-        file.printWriter().use {
-            out -> list.forEach {
-                out.println(it)
+    init {
+        try {
+            json = JSONArray(
+                context.assets.open("example.json").bufferedReader().use { it.readText() })
+            for (i in 0 until json.length()) {
+                var jsonObject = json.getJSONObject(i)
+                var item: Item = Item(
+                    jsonObject.optString("title"),
+                    jsonObject.optString("description"),
+                    jsonObject.optString("creationDate"),
+                    jsonObject.getBoolean("check")
+                )
+                list.add(item)
             }
+
+        } catch (ioException: IOException) {
+            Log.d("Error", ioException.toString())
         }
     }
 }
+
+
+
+
